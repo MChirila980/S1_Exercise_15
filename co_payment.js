@@ -7,8 +7,8 @@
 
    Payment Form Script
    
-   Author: 
-   Date:   
+   Author: Melinda Chirila
+   Date:   4/11/2019
    
    Filename: co_payment.js
    
