@@ -32,13 +32,10 @@ window.addEventListener("load", function () {
       orderForm.elements.orderDate.value = new Date().toDateString();
       orderForm.elements.model.focus();
 
-     
       calcOrder();
 
-    
       orderForm.elements.model.onchange = calcOrder;
       orderForm.elements.qty.onchange = calcOrder;
-
 
       var planOptions = document.querySelectorAll('input[name="protection"]');
       for (var i = 0; i < planOptions.length; i++) {
@@ -49,32 +46,25 @@ window.addEventListener("load", function () {
 function calcOrder() {
       var orderForm = document.forms.orderForm;
 
-     
       var mIndex = orderForm.elements.model.selectedIndex;
       var mCost = orderForm.elements.model.options[mIndex].value;
       var qIndex = orderForm.elements.qty.selectedIndex;
       var quantity = orderForm.elements.qty[qIndex].value;
 
-     
       var initialCost = mCost * quantity;
       orderForm.elements.initialCost.value = formatUSCurrency(initialCost);
 
-      
       var pCost = document.querySelector('input[name="protection"]:checked').value + quantity;
       orderForm.elements.protectionCost.value = formatNumber(pCost, 2);
 
-      
       orderForm.elements.subtotal.value = formatNumber(initialCost + pCost, 2);
 
-     
       var salesTax = 0.05 * (initialCost + pCost);
       orderForm.elements.salesTax.value = formatNumber(salesTax, 2);
 
-      
       var totalCost = initialCost + pCost + salesTax;
       orderForm.elements.totalCost.value = formatUSCurrency(totalCost);
 
-     
       orderForm.elements.modelName.value = orderForm.elements.model.options[mIndex].text;
 
       orderForm.elements.protectionName.value = document.querySelector('input[name="protection"]:checked').nextSibling.nodeValue;
