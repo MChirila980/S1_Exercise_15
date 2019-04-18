@@ -44,78 +44,177 @@
 
 */
 
-//displays the current date when it is loaded by the browser
-window.addEventListener("load", function() { 
-      var orderForm = document.forms.orderForm; 
-      orderForm.elements.orderDate.value = new Date().toDateString();
-      orderForm.elements.model.focus();
+window.addEventListener('load', function () {
+
+      var formData = location.search.slice(1);
+      
+      formData = formData.replace(/\+/g, " ");
+      
+      formData.decodeURIComponent(formData);
      
-      window.addEventListener("load", function(){
-            var formData = location.search.slice(1);
-      });
-      // Calculate the cost of the order 
-      calcOrder();
+      var formFields = formData.split(/[&=]/g);
+     
+      document.forms.order.elements.orderDate.value = formFields[1];
+      document.forms.order.elements.modelName.value = formFields[5];
+      document.forms.order.elements.qty.value = formFields[7];
+      document.forms.order.elements.initialCost.value = formFields[9];
+      document.forms.order.elements.protectionName.value = formFields[13];
+      document.forms.order.elements.protectionCost.value = formFields[15];
+      document.forms.order.elements.subtotal.value = formFields[17];
+      document.forms.order.elements.salesTax.value = formFields[19];
+      document.forms.order.elements.totalCost.value = formFields[21];
+});
 
-      // Event handlers for the web form 
-      orderForm.elements.model.onchange = calcOrder; 
-      orderForm.elements.qty.onchange = calcOrder;
 
-      var planOptions = document.querySelectorAll('input[name= "protection"]'); 
-      for (var i = 0; i < planOptions.length; i++) {
-      planOptions[i].onclick = calcOrder;
+window.addEventListener('load', function () {
+      
+      document.getElementById("subButton").onclick = runSubmit;
+
+      document.getElementById("cardName").oninput = validateName;
+
+      document.getElementById("cardNumber").oninput = validateNumber;
+
+      document.getElementById("expMonth").onchange = validateMonth;
+
+      document.getElementById("expYear").onchange = validateYear;
+
+      document.getElementById("cvc").oninput = validateCVC;
+});
+
+
+function runSubmit() {
+      
+      validateName();
+      validateCredit();
+      validateNumber();
+      validateMonth();
+      validateYear();
+      validateCVC();
+}
+
+function validateCVC() {
+    
+      var cardCVC = document.getElementById("cvc");
+
+      var creditCard = document.querySelector('input[name="credit"]:checked').value;
+
+      if (cardCVC.validity.valueMissing) {
+            cardCVC.setCustomValidity("Enter your CVC number");
+      }
+      else if ((creditCard === "amex") && (/^\d{4}$/.test(cardCVC.value) === false)) {
+            cardCVC.setCustomValidity("Enter a 4-digit CVC number");
+      }
+      else if ((creditCard !== "amex") && (/^\d{3}$/.test(cardCVC.value) === false)) {
+            cardCVC.setCustomValidity("Enter a 3-digit CVC number");
+      }
+      else {
+            cardCVC.setCustomValidity("");
+      }
+}
+
+function validateMonth() {
+      var cardMonth = document.getElementById("expMonth");
+
+      if (cardMonth.selectedIndex === 0) {
+            cardMonth.setCustomValidity("Select the expiration month");
       }
       
-});
-      //for the Calcorder function
-      function calcOrder() { 
-      var orderForm = document.forms.orderForm;
+      else {
+            cardMonth.setCustomValidity("");
+      }
+}
 
-      // Calculate the initial cost of the order 
-      var mIndex = orderForm.elements.model.selectedIndex; 
-      var mCost = orderForm.elements.model.options[mIndex].value; 
-      var qIndex = orderForm.elements.qty.selectedIndex; 
-      var quantity = orderForm.elements.qty[qIndex].value;
+function validateYear() {
+      var cardYear = document.getElementById("expYear");
 
-      // Initial cost = cost x quantity 
-      var initialCost = mCost*quantity; 
-      orderForm.elements.initialCost.value = formatUSCurrency(initialCost);
-            
-      // Retrieve the cost of the user's protection plan 
-      var pCost = document.querySelector('input[name="protection"]:checked').value;
-      orderForm.elements.protectionCost.value = formatNumber(pCost, 2);
+     
+      if (cardYear.selectedIndex === 0) {
+        
+            cardYear.setCustomValidity("Select the expiration year");
+      }
+   
+      else {
+            cardYear.setCustomValidity("");
+      }
+}
 
-      // Calculate the order subtotal 
-      orderForm.elements.subtotal.value = initialCost + pCost;
+function validateNumber() {
+      var cardNumber = document.getElementById("cardNumber");
 
-      // Calculate the sales tax 
-      var salesTax = 0.05*(initialCost + pCost); 
-      orderForm.elements.salesTax.value = formatNumber(salesTax, 2);
+     
+      if (cardNumber.validity.valueMissing) {
 
-      // Calculate the cost of the total order 
-      var totalCost = initialCost + pCost + salesTax; 
-      orderForm.elements.totalCost.value = FormatUSCurrency(totalCost);
+            cardNumber.setCustomValidity("Enter your card number");
+      }
+     
+      else if (cardNumber.validity.patternMismatch) {
+          
+            cardNumber.setCustomValidity("Enter a valid card number");
+      }
+     
+      else if (luhn(cardNumber.value) === false) {
+            cardNumber.setCustomValidity("Enter a legitimate card number");
+      }
+     
+      else {
+            cardNumber.setCustomValidity("");
+      }
+}
+
+function validateCredit() {
+      var creditCard = document.forms.payment.elements.credit[0];
+
+     
+      if (creditCard.validity.valueMissing) {
+          
+            creditCard.setCustomValidity("Select your credit card");
+      }
+     
+      else {
+            creditCard.setCustomValidity("");
+      }
+}
+
+function validateName() {
+      var cardName = document.getElementById("cardName");
+
+   
+      if (cardName.validity.valueMissing) {
+     
+            cardName.setCustomValidity("Enter your name as it appears on the card");
+      }
+     
+      else {
+            cardName.setCustomValidity("");
+      }
+}
+
+function sumDigits(numStr) {
+     
+      var digitTotal = 0;
+
+     
+      for (var i = 0; i < numStr.length; i++) {
+        
+            digitTotal += parseInt(numStr.charAt(i));
+      }
+
+      return digitTotal;
+}
 
 
-      // Store the order details 
-      orderForm.elements.modelName.value =
-      orderForm.elements.model.options[mIndex].text;
-      orderForm.elements.protectionName.value = document.querySelector('input[name="protection"]:checked').nextSibling.nodeValue;
+function luhn(idNum) {
+     
+      var string1 = "";
+      var string2 = "";
+      for (var i = idNum.length - 1; i >= 0; i -= 2) {
+            string1 += idNum.charAt(i);
+      }
 
-      } 
-      
-      function formatNumber(val, decimals) { 
-            return val.toLocaleString(undefined,
-                  {minimumFractionDigits: decimals, 
-                        maximumFractionDigits: decimals});
-            }
-            
-            function formatUSCurrency(val) { 
-            return val.toLocaleString('en-US', 
-            {style: "currency", currency: "USD"} );
+      for (var i = idNum.length - 2; i >= 0; i -= 2) {
+          
+            string2 += 2 * idNum.charAt(i);
+      }
 
-            }
-            
-
-
-
-
+      return sumDigits(string1 + string2) % 10 === 0;
+}
